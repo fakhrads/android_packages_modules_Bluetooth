@@ -712,9 +712,10 @@ std::string A2DP_CodecInfoString(const uint8_t* p_codec_info);
 bool A2DP_IsCodecEnabledInOffload(btav_a2dp_codec_index_t codec_index);
 // aptX Adaptive release 2.1 (the vendor property persist.vendor.qcom.bluetooth.aptxadaptiver2_1_support).
 bool A2DP_Get_Aptx_AdaptiveR2_1_Supported();
-// aptX Adaptive release 2.2 (persist.vendor.qcom.bluetooth.aptxadaptiver2_2_support).
+// aptX Adaptive release 2.2 (persist.vendor.qcom.bluetooth.aptxadaptiver2_2_support, and the split
+// TX of the controller).
 bool A2DP_Get_Aptx_AdaptiveR2_2_Supported();
-// aptX Adaptive split TX of the source; needs the controller to report it, so it is off here.
+// aptX Adaptive split TX of the source: what the add on features of the controller report.
 bool A2DP_Get_Source_Aptx_Adaptive_SplitTx_Supported();
 
 // Add enum-based flag operators to the btav_a2dp_codec_config_t fields

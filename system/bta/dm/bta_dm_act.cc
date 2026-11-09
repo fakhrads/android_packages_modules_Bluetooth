@@ -70,6 +70,7 @@
 #include "stack/include/btm_client_interface.h"
 #include "stack/include/btm_inq.h"
 #include "stack/include/btm_status.h"
+#include "stack/include/btm_vendor_api.h"
 #include "stack/include/gatt_api.h"
 #include "stack/include/l2cap_interface.h"
 #include "stack/include/main_thread.h"
@@ -246,6 +247,9 @@ void BTA_dm_on_hw_on(const std::string local_name) {
 
   get_btm_client_interface().link_policy.BTM_WritePageTimeout(
           osi_property_get_int32(PROPERTY_PAGE_TIMEOUT, p_bta_dm_cfg->page_timeout));
+
+  // What the Qualcomm controller reports for the A2DP offload (aptX Adaptive) and QHS
+  BTM_ReadVendorAddOnFeatures();
 
   if (android::sysprop::bluetooth::Ble::vnd_included()) {
     get_btm_client_interface().ble.BTM_BleReadControllerFeatures(

@@ -133,6 +133,7 @@ cc_library_static {
         "btm/btm_ble_sec.cc",
         "btm/btm_client_interface.cc",
         "btm/btm_dev.cc",
+        "btm/btm_vendor.cc",
         "btm/btm_devctl.cc",
         "btm/btm_inq.cc",
         "btm/btm_iot_config.cc",

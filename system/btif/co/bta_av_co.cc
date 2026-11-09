@@ -51,12 +51,14 @@
 #include "device/include/device_iot_config.h"
 #include "include/hardware/bt_av.h"
 #include "osi/include/allocator.h"
+#include "osi/include/properties.h"
 #include "stack/include/a2dp_codec_api.h"
 #include "stack/include/a2dp_constants.h"
 #include "stack/include/a2dp_ext.h"
 #include "stack/include/avdt_api.h"
 #include "stack/include/bt_hdr.h"
 #include "stack/include/bt_uuid16.h"
+#include "stack/include/btm_vendor_api.h"
 
 using namespace bluetooth;
 
@@ -981,6 +983,16 @@ bool BtaAvCo::ReportSourceCodecState(BtaAvCoPeer* p_peer) {
             p_peer->addr);
     return false;
   }
+  // aptX Adaptive reports whether the link is on the QHS PHY, which aptX Lossless needs. The
+  // vendor Bluetooth HAL reports it itself when it owns the vendor commands.
+  if (codec_config.codec_type == BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE &&
+      !osi_property_get_bool("persist.vendor.qcom.bluetooth.vsc_enabled", false)) {
+    codec_config.codec_specific_3 &= ~(static_cast<int64_t>(QHS_SUPPORT_MASK));
+    codec_config.codec_specific_3 |= BTM_IsQHSPhySupported(p_peer->addr)
+                                             ? static_cast<int64_t>(QHS_SUPPORT_AVAILABLE)
+                                             : static_cast<int64_t>(QHS_SUPPORT_NOT_AVAILABLE);
+  }
+
   log::info("peer {} codec_config={}", p_peer->addr, codec_config.ToString());
   btif_av_report_source_codec_state(p_peer->addr, codec_config, codecs_local_capabilities,
                                     codecs_selectable_capabilities);

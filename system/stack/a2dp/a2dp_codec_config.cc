@@ -56,6 +56,7 @@
 #include "stack/include/a2dp_vendor_lhdcv3.h"
 #include "stack/include/a2dp_vendor_lhdcv5.h"
 #include "stack/include/a2dp_vendor_opus.h"
+#include "stack/include/btm_vendor_api.h"
 #endif
 
 #include "audio_hal_interface/a2dp_encoding.h"
@@ -1726,11 +1727,16 @@ bool A2DP_Get_Aptx_AdaptiveR2_1_Supported() {
   return osi_property_get_bool("persist.vendor.qcom.bluetooth.aptxadaptiver2_1_support", false);
 }
 
-bool A2DP_Get_Aptx_AdaptiveR2_2_Supported() {
-  return osi_property_get_bool("persist.vendor.qcom.bluetooth.aptxadaptiver2_2_support", false);
+bool A2DP_Get_Source_Aptx_Adaptive_SplitTx_Supported() {
+  // From the add on features of the controller; false until they were read
+  return BTM_IsAptxAdaptiveSplitTxSupported();
 }
 
-bool A2DP_Get_Source_Aptx_Adaptive_SplitTx_Supported() { return false; }
+bool A2DP_Get_Aptx_AdaptiveR2_2_Supported() {
+  // Release 2.2 needs the split TX of the controller as well as the vendor property
+  return A2DP_Get_Source_Aptx_Adaptive_SplitTx_Supported() &&
+         osi_property_get_bool("persist.vendor.qcom.bluetooth.aptxadaptiver2_2_support", false);
+}
 
 uint32_t A2DP_VendorCodecGetVendorId(const uint8_t* p_codec_info) {
   const uint8_t* p = &p_codec_info[A2DP_VENDOR_CODEC_VENDOR_ID_START_IDX];

@@ -24,6 +24,7 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <vector>
 
 #include "common/bidi_queue.h"
 #include "hci/hci_interface.h"
@@ -31,10 +32,12 @@
 #include "hci/include/packet_fragmenter.h"
 #include "main/shim/entry.h"
 #include "osi/include/allocator.h"
+#include "osi/include/properties.h"
 #include "packet/raw_builder.h"
 #include "stack/include/bt_hdr.h"
 #include "stack/include/bt_types.h"
 #include "stack/include/btm_iso_api.h"
+#include "stack/include/btm_vendor_api.h"
 #include "stack/include/hcimsgs.h"
 #include "stack/include/main_thread.h"
 
@@ -283,6 +286,21 @@ static void register_le_event(bluetooth::hci::SubeventCode subevent_code) {
                                                          handler->Bind(subevent_callback_with_hop));
 }
 
+static void qbce_vse_cb(bluetooth::hci::VendorSpecificEventView vendor_specific_event_view) {
+  auto payload = vendor_specific_event_view.GetPayload();
+  std::vector<uint8_t> bytes{payload.begin(), payload.end()};
+  // The vendor layer works on the main thread, with the ACL links
+  do_in_main_thread(base::BindOnce(&btm_vendor_vse_cback,
+                                   static_cast<uint8_t>(bluetooth::hci::VseSubeventCode::QBCE_VS_EVENT),
+                                   std::move(bytes)));
+}
+
+static void register_vs_event() {
+  auto handler = bluetooth::shim::GetGdShimHandler();
+  bluetooth::shim::GetHciLayer()->RegisterVendorSpecificEventHandler(
+          bluetooth::hci::VseSubeventCode::QBCE_VS_EVENT, handler->Bind(qbce_vse_cb));
+}
+
 static void register_development_event(bluetooth::hci::DevelopmentSubeventCode subevent_code) {
   auto handler = bluetooth::shim::GetGdShimHandler();
   // Register the event handler, but do not send it directly to main, instead do another hop on the
@@ -416,6 +434,10 @@ void bluetooth::shim::hci_on_reset_complete() {
   register_event_range<bluetooth::hci::DevelopmentSubeventCode>(
           register_development_subevent_code, [](auto c) { cpp::register_development_event(c); });
 
+  // The vendor Bluetooth HAL takes the vendor events itself when it owns the vendor commands
+  if (!osi_property_get_bool("persist.vendor.qcom.bluetooth.vsc_enabled", false)) {
+    cpp::register_vs_event();
+  }
   cpp::register_for_iso();
 }
 
