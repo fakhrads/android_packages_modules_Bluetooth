@@ -150,7 +150,9 @@ void a2dp_vendor_aptx_adaptive_feeding_flush(void) {
   }
 }
 
-uint64_t a2dp_vendor_aptx_adaptive_get_encoder_interval_ms(void) { return 0; }
+// The audio HAL encodes aptX Adaptive, so this interval is only ever the period of the software
+// timer, which must not be zero: a stream that was not offloaded would spin on it.
+uint64_t a2dp_vendor_aptx_adaptive_get_encoder_interval_ms(void) { return 20; }
 
 int a2dp_vendor_aptx_adaptive_get_effective_frame_size() { return 0; }
 

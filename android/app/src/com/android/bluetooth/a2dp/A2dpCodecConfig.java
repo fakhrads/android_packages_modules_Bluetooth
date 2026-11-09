@@ -339,11 +339,15 @@ class A2dpCodecConfig {
         }
 
         // aptX Adaptive is encoded by the audio HAL only. The native stack leaves it out
-        // unless the device offloads it, so this priority only matters where it is offered.
+        // unless the device offloads it. It is offered, but below every other codec (SBC is
+        // 1001) so it is never picked by itself: it is chosen by hand in Developer options,
+        // which gives it the highest priority. 0 is not an option: the native default priority
+        // of a codec is higher the later it was added, and would put it on top.
+        // bluetooth.a2dp.source.aptx_adaptive_priority.config sets another value.
         value =
                 SystemProperties.getInt(
                         "bluetooth.a2dp.source.aptx_adaptive_priority.config",
-                        SdkLevel.isAtLeastC() ? 9001 : BluetoothCodecConfig.CODEC_PRIORITY_DISABLED);
+                        SdkLevel.isAtLeastC() ? 1 : BluetoothCodecConfig.CODEC_PRIORITY_DISABLED);
         if ((value >= BluetoothCodecConfig.CODEC_PRIORITY_DISABLED)
                 && (value < BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST)) {
             mA2dpSourceCodecPriorityAptxAdaptive = value;
