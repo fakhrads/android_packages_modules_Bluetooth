@@ -22,8 +22,13 @@
 #include <cstdint>
 #include <optional>
 
-/* Maximum size in bytes of the codec capabilities information element. */
-#define AVDT_CODEC_SIZE 20
+/*
+ * Maximum size in bytes of the codec capabilities information element, with its length octet.
+ * The aptX Adaptive element is 42 octets long after the length octet; 20 cuts it short, the
+ * length octet then says more than there is, and the sink refuses the configuration as a bad
+ * payload. The CLO stack has 45.
+ */
+#define AVDT_CODEC_SIZE 45
 
 /* Profile supported features */
 #define A2DP_SUPF_PLAYER 0x0001
