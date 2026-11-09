@@ -45,12 +45,16 @@ constexpr uint16_t kHciVsQbceOcf = 0xFC51;
 constexpr uint16_t kHciVsGetAddonFeatures = 0xFC1D;
 constexpr uint8_t kQbceSetQhsHostMode = 0x01;
 constexpr uint8_t kQbceSetQlmEventMask = 0x0F;
+constexpr uint8_t kQbceSetQllEventMask = 0x10;
 
 // What the QHS host mode takes: the transport, and the mode
 constexpr uint8_t kQhsTransportBrEdr = 0;
+constexpr uint8_t kQhsTransportLe = 1;
+constexpr uint8_t kQhsTransportLeIso = 2;
 constexpr uint8_t kQhsHostAware = 3;
 constexpr uint8_t kQhsHostDisableAll = 4;
 constexpr uint8_t kQhsBrEdrMask = 0x01;
+constexpr uint8_t kQhsLeMask = 0x02;
 
 // Vendor specific event sent for the QBCE: the message type it starts with
 constexpr uint8_t kHciVseSubcodeQbce = 0x51;
@@ -122,33 +126,58 @@ void send_qbce(const uint8_t* data, uint8_t len) {
                                                               qbce_command_complete);
 }
 
-// The QCM event mask: the controller reports a link changing PHY (BR/EDR or QHS) with it
+// The QHS host modes and the event masks, in the order and with the bytes of the Qualcomm stack. The
+// event masks go out with the least significant byte first: 0x4A 0x02 asks for the messages 1 (QCM PHY
+// change), 3, 6 and 9. The first version of this sent them the other way round, and the controller
+// then never reported a link going to QHS.
 void configure_qhs() {
+  bool qle_supported;
   bool qcm_supported;
   {
     std::lock_guard<std::mutex> lock(g_mutex);
+    qle_supported = addon_byte_bit(g_addon_features, g_addon_features_len, 3, 0x10);
     qcm_supported = addon_byte_bit(g_addon_features, g_addon_features_len, 3, 0x20);
   }
-  if (!qcm_supported) {
-    log::info("the controller has no QCM HCI, QHS is left as it is");
-    return;
+
+  if (qle_supported) {
+    // QHS for LE ISO is on unless persist.vendor.qcom.bluetooth.qhs_enable says otherwise
+    char qhs_iso[PROPERTY_VALUE_MAX] = "true";
+    osi_property_get("persist.vendor.qcom.bluetooth.qhs_enable", qhs_iso, "true");
+    const uint8_t iso_mode[] = {kQbceSetQhsHostMode, kQhsTransportLeIso,
+                                static_cast<uint8_t>(strncmp("true", qhs_iso, 4) == 0
+                                                             ? kQhsHostAware
+                                                             : kQhsHostDisableAll)};
+    send_qbce(iso_mode, sizeof(iso_mode));
+
+    // A test and debug property of the vendor: 0xFF leaves the controller's own default
+    char qhs_value[PROPERTY_VALUE_MAX] = "255";
+    osi_property_get("persist.vendor.qcom.bluetooth.qhs_support", qhs_value, "255");
+    uint8_t qhs_support_mask = static_cast<uint8_t>(atoi(qhs_value));
+    log::info("qhs support mask={}", qhs_support_mask);
+    if (qhs_support_mask != 0xFF) {
+      const uint8_t br_edr[] = {kQbceSetQhsHostMode, kQhsTransportBrEdr,
+                                static_cast<uint8_t>((qhs_support_mask & kQhsBrEdrMask)
+                                                             ? kQhsHostAware
+                                                             : kQhsHostDisableAll)};
+      send_qbce(br_edr, sizeof(br_edr));
+      const uint8_t le_mode = (qhs_support_mask & kQhsLeMask) ? kQhsHostAware : kQhsHostDisableAll;
+      const uint8_t le[] = {kQbceSetQhsHostMode, kQhsTransportLe, le_mode};
+      send_qbce(le, sizeof(le));
+      const uint8_t le_iso[] = {kQbceSetQhsHostMode, kQhsTransportLeIso, le_mode};
+      send_qbce(le_iso, sizeof(le_iso));
+    }
+
+    const uint8_t qll_event_mask[] = {kQbceSetQllEventMask, 0x4A, 0x02, 0x00, 0x00,
+                                      0x00,                 0x00, 0x00, 0x00};
+    send_qbce(qll_event_mask, sizeof(qll_event_mask));
   }
 
-  const uint8_t qlm_event_mask[] = {kQbceSetQlmEventMask, 0x00, 0x00, 0x00, 0x00,
-                                    0x00,                  0x00, 0x02, 0x4A};
-  send_qbce(qlm_event_mask, sizeof(qlm_event_mask));
-
-  // A test and debug property of the vendor: 0xFF leaves the controller's own default
-  char qhs_value[PROPERTY_VALUE_MAX] = "255";
-  osi_property_get("persist.vendor.qcom.bluetooth.qhs_support", qhs_value, "255");
-  uint8_t qhs_support_mask = static_cast<uint8_t>(atoi(qhs_value));
-  log::info("qhs support mask={}", qhs_support_mask);
-  if (qhs_support_mask != 0xFF) {
-    const uint8_t host_mode[] = {kQbceSetQhsHostMode, kQhsTransportBrEdr,
-                                 static_cast<uint8_t>((qhs_support_mask & kQhsBrEdrMask)
-                                                              ? kQhsHostAware
-                                                              : kQhsHostDisableAll)};
-    send_qbce(host_mode, sizeof(host_mode));
+  if (qcm_supported) {
+    const uint8_t qlm_event_mask[] = {kQbceSetQlmEventMask, 0x4A, 0x02, 0x00, 0x00,
+                                      0x00,                 0x00, 0x00, 0x00};
+    send_qbce(qlm_event_mask, sizeof(qlm_event_mask));
+  } else {
+    log::info("the controller has no QCM HCI, so it does not report the PHY of a link");
   }
 }
 
@@ -228,6 +257,7 @@ void btm_vendor_vse_cback(uint8_t vse_subcode, std::vector<uint8_t> payload) {
     return;
   }
   const uint8_t message = payload[0];
+  log::info("QBCE message 0x{:02x}, {} bytes", message, payload.size());
   switch (message) {
     case kMsgQbceQcmPhyChange:
       qcm_phy_change(payload.data() + 1, payload.size() - 1);
