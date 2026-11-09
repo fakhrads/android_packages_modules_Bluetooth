@@ -622,7 +622,8 @@ tA2DP_STATUS A2DP_VendorIsCodecConfigMatchAptxAdaptive(const uint8_t* p_codec_in
   return a2dp_status;
 }
 
-btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndexAptxAdaptive(const uint8_t* p_codec_info) {
+btav_a2dp_codec_index_t A2DP_VendorSourceCodecIndexAptxAdaptive(
+        [[maybe_unused]] const uint8_t* p_codec_info) {
   return BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE;
 }
 

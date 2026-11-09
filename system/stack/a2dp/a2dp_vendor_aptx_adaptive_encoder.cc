@@ -89,10 +89,11 @@ void A2DP_VendorUnloadEncoderAptxAdaptive(void) {
   }
 }
 
-void a2dp_vendor_aptx_adaptive_encoder_init(const tA2DP_ENCODER_INIT_PEER_PARAMS* p_peer_params,
-                                            A2dpCodecConfig* a2dp_codec_config,
-                                            a2dp_source_read_callback_t read_callback,
-                                            a2dp_source_enqueue_callback_t enqueue_callback) {
+void a2dp_vendor_aptx_adaptive_encoder_init(
+        [[maybe_unused]] const tA2DP_ENCODER_INIT_PEER_PARAMS* p_peer_params,
+        [[maybe_unused]] A2dpCodecConfig* a2dp_codec_config,
+        [[maybe_unused]] a2dp_source_read_callback_t read_callback,
+        [[maybe_unused]] a2dp_source_enqueue_callback_t enqueue_callback) {
   if (true /*A2DP_IsCodecEnabledInOffload(BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE)*/) {
     return;
   }
@@ -153,7 +154,7 @@ uint64_t a2dp_vendor_aptx_adaptive_get_encoder_interval_ms(void) { return 0; }
 
 int a2dp_vendor_aptx_adaptive_get_effective_frame_size() { return 0; }
 
-void a2dp_vendor_aptx_adaptive_send_frames(uint64_t timestamp_us) {
+void a2dp_vendor_aptx_adaptive_send_frames([[maybe_unused]] uint64_t timestamp_us) {
   if (true /*A2DP_IsCodecEnabledInOffload(BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE)*/) {
     return;
   }
