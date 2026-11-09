@@ -19,7 +19,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "types/raw_address.h"
+#include <bluetooth/types/address.h>
 
 /*
  * The Qualcomm side of the controller that the A2DP offload needs to know about: which add on
