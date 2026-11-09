@@ -659,7 +659,7 @@ constexpr uint8_t kEnablingAttemptsCountMaximum = 5;
 /* The Qualcomm vendor command that starts and stops the A2DP offload of the codecs the
  * Google one has no code for (aptX Adaptive): the opcode, and its two sub commands */
 #define HCI_QTI_CONTROLLER_A2DP_OPCODE (0x000A | HCI_GRP_VENDOR_SPECIFIC)
-#define HCI_VSQC_CONTROLLER_A2DP_OPCODE 0x0A
+/* HCI_VSQC_CONTROLLER_A2DP_OPCODE, 0x0A, is the start sub command and is defined above */
 #define HCI_VSQC_CONTROLLER_A2DP_STOP_OPCODE 0x05
 
 #define VS_HCI_A2DP_OFFLOAD_START 0x01
