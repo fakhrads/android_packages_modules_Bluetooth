@@ -165,6 +165,11 @@ void configure_qhs() {
       send_qbce(le, sizeof(le));
       const uint8_t le_iso[] = {kQbceSetQhsHostMode, kQhsTransportLeIso, le_mode};
       send_qbce(le_iso, sizeof(le_iso));
+    } else {
+      // Not in the stock stack, which leaves BR/EDR at the controller default: QHS is asked for
+      // explicitly on BR/EDR links, for aptX Adaptive Lossless, and LE is left as it is.
+      const uint8_t br_edr[] = {kQbceSetQhsHostMode, kQhsTransportBrEdr, kQhsHostAware};
+      send_qbce(br_edr, sizeof(br_edr));
     }
 
     const uint8_t qll_event_mask[] = {kQbceSetQllEventMask, 0x4A, 0x02, 0x00, 0x00,
