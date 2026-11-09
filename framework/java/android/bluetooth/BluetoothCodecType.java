@@ -86,6 +86,10 @@ public final class BluetoothCodecType implements Parcelable {
     @Hide
     public static final long CODEC_ID_LHDCV3 = 0x4c33_053a_ffL;
 
+    /** aptX Adaptive codec identifier. See {@link BluetoothCodecType#getCodecId}. */
+    @Hide
+    public static final long CODEC_ID_APTX_AD = 0x00ad_00d7_ffL;
+
     @Hide
     @Retention(RetentionPolicy.SOURCE)
     @LongDef({
@@ -98,6 +102,7 @@ public final class BluetoothCodecType implements Parcelable {
         CODEC_ID_OPUS,
         CODEC_ID_LHDCV5,
         CODEC_ID_LHDCV3,
+        CODEC_ID_APTX_AD,
     })
     public @interface CodecId {}
 
@@ -289,6 +294,10 @@ public final class BluetoothCodecType implements Parcelable {
         if (codecId == CODEC_ID_LHDCV5) {
             return new BluetoothCodecType(
                     BluetoothCodecConfig.SOURCE_CODEC_TYPE_INVALID, CODEC_ID_LHDCV5, "LHDCV5");
+        }
+        if (codecId == CODEC_ID_APTX_AD) {
+            return new BluetoothCodecType(
+                    BluetoothCodecConfig.SOURCE_CODEC_TYPE_INVALID, CODEC_ID_APTX_AD, "aptX Adaptive");
         }
         if (codecId == CODEC_ID_LHDCV3) {
             return new BluetoothCodecType(

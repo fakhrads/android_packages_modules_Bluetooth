@@ -706,6 +706,17 @@ int A2DP_GetEecoderEffectiveFrameSize(const uint8_t* p_codec_info);
 // Returns a string describing the codec information.
 std::string A2DP_CodecInfoString(const uint8_t* p_codec_info);
 
+// aptX Adaptive has no software encoder: the audio HAL encodes it, so the codec is only offered
+// when the offload path can carry it. These read the vendor properties of the device.
+// Returns true when |codec_index| is carried by the A2DP offload path.
+bool A2DP_IsCodecEnabledInOffload(btav_a2dp_codec_index_t codec_index);
+// aptX Adaptive release 2.1 (the vendor property persist.vendor.qcom.bluetooth.aptxadaptiver2_1_support).
+bool A2DP_Get_Aptx_AdaptiveR2_1_Supported();
+// aptX Adaptive release 2.2 (persist.vendor.qcom.bluetooth.aptxadaptiver2_2_support).
+bool A2DP_Get_Aptx_AdaptiveR2_2_Supported();
+// aptX Adaptive split TX of the source; needs the controller to report it, so it is off here.
+bool A2DP_Get_Source_Aptx_Adaptive_SplitTx_Supported();
+
 // Add enum-based flag operators to the btav_a2dp_codec_config_t fields
 #ifndef DEFINE_ENUM_FLAG_OPERATORS
 // Use NOLINT to suppress missing parentheses warnings around bitmask.

@@ -65,6 +65,7 @@ typedef enum {
   BTAV_A2DP_CODEC_INDEX_SOURCE_OPUS,
   BTAV_A2DP_CODEC_INDEX_SOURCE_LHDCV5,
   BTAV_A2DP_CODEC_INDEX_SOURCE_LHDCV3,
+  BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE,
 
   BTAV_A2DP_CODEC_INDEX_SOURCE_MAX,
 
@@ -208,6 +209,8 @@ struct btav_a2dp_codec_config_t {
         return "LHDC";
       case BTAV_A2DP_CODEC_INDEX_SOURCE_LHDCV3:
         return "LHDC V3";
+      case BTAV_A2DP_CODEC_INDEX_SOURCE_APTX_ADAPTIVE:
+        return "aptX Adaptive";
       case BTAV_A2DP_CODEC_INDEX_SINK_SBC:
         return "SBC (Sink)";
       case BTAV_A2DP_CODEC_INDEX_SINK_AAC:

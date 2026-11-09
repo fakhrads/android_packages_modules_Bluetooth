@@ -64,6 +64,8 @@ class A2dpCodecConfig {
 
     private @CodecPriority int mA2dpSourceCodecPriorityLhdcv3 =
             BluetoothCodecConfig.CODEC_PRIORITY_DEFAULT;
+    private @CodecPriority int mA2dpSourceCodecPriorityAptxAdaptive =
+            BluetoothCodecConfig.CODEC_PRIORITY_DEFAULT;
 
     private BluetoothCodecConfig[] mCodecConfigOffloading = new BluetoothCodecConfig[0];
 
@@ -336,8 +338,19 @@ class A2dpCodecConfig {
             mA2dpSourceCodecPriorityLhdcv3 = value;
         }
 
+        // aptX Adaptive is encoded by the audio HAL only. The native stack leaves it out
+        // unless the device offloads it, so this priority only matters where it is offered.
+        value =
+                SystemProperties.getInt(
+                        "bluetooth.a2dp.source.aptx_adaptive_priority.config",
+                        SdkLevel.isAtLeastC() ? 9001 : BluetoothCodecConfig.CODEC_PRIORITY_DISABLED);
+        if ((value >= BluetoothCodecConfig.CODEC_PRIORITY_DISABLED)
+                && (value < BluetoothCodecConfig.CODEC_PRIORITY_HIGHEST)) {
+            mA2dpSourceCodecPriorityAptxAdaptive = value;
+        }
+
         BluetoothCodecConfig codecConfig;
-        BluetoothCodecConfig[] codecConfigArray = new BluetoothCodecConfig[8];
+        BluetoothCodecConfig[] codecConfigArray = new BluetoothCodecConfig[9];
         codecConfig =
                 new BluetoothCodecConfig.Builder()
                         .setCodecType(BluetoothCodecConfig.SOURCE_CODEC_TYPE_SBC)
@@ -390,6 +403,14 @@ class A2dpCodecConfig {
                         .setCodecPriority(mA2dpSourceCodecPriorityLhdcv3)
                         .build();
         codecConfigArray[7] = codecConfig;
+        codecConfig =
+                new BluetoothCodecConfig.Builder()
+                        .setExtendedCodecType(
+                                new BluetoothCodecType(
+                                        9, BluetoothCodecType.CODEC_ID_APTX_AD, "aptX Adaptive"))
+                        .setCodecPriority(mA2dpSourceCodecPriorityAptxAdaptive)
+                        .build();
+        codecConfigArray[8] = codecConfig;
 
         return codecConfigArray;
     }
